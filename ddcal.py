@@ -318,9 +318,7 @@ if __name__ == "__main__":
     results = parser.parse_args()
     configfile = results.configfile or 'ddcal.yml'
     logging.info('Using config file: {}'.format(os.path.abspath(configfile)))
-    print(configfile)
-    # msin =
-    # main(msin, cfgfile='ddcal.yml')
+    main(msin, cfgfile=configfile)
     extime = Time.now() - t0
     print("Execution time: {:.1f} min".format(extime.to("minute").value))
 

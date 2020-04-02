@@ -28,7 +28,7 @@ RUN apt-get update && apt install -y \
         wget \
         libfftw3-dev \
         libgsl-dev
-
+        
 RUN git clone https://github.com/aroffringa/modeltools.git modeltools && \
     cd modeltools && \
     mkdir build && \
@@ -36,6 +36,11 @@ RUN git clone https://github.com/aroffringa/modeltools.git modeltools && \
     cmake ../ && \
     make -j4 && \
     cp bbs2model cluster editmodel render /usr/local/bin/ 
+
+    
+RUN apt-get update && apt install -y python-pip
+RUN python -m pip install matplotlib h5py astropy pandas
+RUN python -m pip install pyyaml
 
 ADD ddcal.py /usr/local/bin/
 ADD cluster.py /usr/local/bin/
