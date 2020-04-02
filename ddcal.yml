@@ -1,0 +1,80 @@
+#:===========================================================================
+# Settings for ddcal processing 
+#:===========================================================================
+####################### DICAL IMAGING #######################
+
+#global:
+#    dppp_bin: 'DPPP' # on blizzard
+#    wsclean_bin: 'wsclean'
+#    makesourcedb_bin: 'makesourcedb'
+#    bbs2model_bin: 'bbs2model'
+#    render_bin: 'render'
+
+clean1: # wsclean setup
+    imagesize: 3072
+    pixelsize: 3 
+    multifreq: 0  
+    automask: 10
+    autothresh: 5
+    multiscale: False
+    kwstring: '' # use this for additional wsclean options, e.g. '-weight uniform -use-idg' 
+
+dical1: # DPPP setup for direction independent calibration
+    solint: 10
+    startchan: 40
+    nchan: 200 
+    mode: 'phaseonly'
+    uvlambdamin: 500 # Ignore baselines / channels with UV < uvlambdamin wavelengths.
+
+clean2:
+    imagesize: 3072
+    pixelsize: 3 
+    multifreq: 3  
+    automask: 6
+    autothresh: 1
+    multiscale: True
+    
+dical2:
+    solint: 1
+    startchan: 40
+    nchan: 200
+    mode: 'phaseonly'
+    uvlambdamin: 500 # Ignore baselines / channels with UV < uvlambdamin wavelengths.
+
+clean3:
+    imagesize: 3072
+    pixelsize: 3
+    multifreq: 3
+    automask: 5
+    autothresh: 0.5
+    multiscale: True
+
+####################### CLUSTERING #######################
+cluster:
+    nbright: 80 # number of brightest clean components (CC) to check for artefacts
+    boxsize: 250 # the boxsize around CC in pixels where to check for artefacts
+    nclusters: 5 # number of clusters ('auto' -- to set automatically)
+    cluster_radius: 5 # arcmin
+    cluster_overlap: 1.6 # if lower than 2 clusters can intersect
+    auto: True
+    add_manual: False
+
+####################### DD CALIBRATION #######################
+ddcal: # see DPPP/DDECal documentation
+    solint: 120 # Solution interval in timesteps (1 ~ 30sec for Apertif).
+    mode: 'diagonal' # Type of constraint to apply. 
+    nchan: 15 # Number of channels in each channel block, for which the solution is assumed to be constant.
+    startchan: 0
+    nchan: 192
+    uvlambdamin: 500 # Ignore baselines / channels with UV < uvlambdamin wavelengths.
+
+# TODO:    
+plotsols:
+    
+clean4:
+    pixelsize: 3
+    multifreq: 3
+    multiscale: True
+    automask: 5
+    autothresh: 0.5
+    
