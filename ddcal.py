@@ -26,6 +26,8 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 import yaml
 
+import argparse
+
 from cluster import main as cluster
 
 # from configparser import ConfigParser
@@ -33,39 +35,42 @@ from cluster import main as cluster
 # config.read('ddcal.cfg')
 # print config('dical2')
 
-
-dppp_bin = '/home/soft/DP3/build/DPPP/DPPP'
-wsclean_bin = '/home/soft/wsclean/wsclean/build/wsclean'
-makesourcedb_bin = '/home/soft/DP3/build/makesourcedb'
-bbs2model_bin = '/home/soft/modeltools/build/bbs2model'
-render_bin = '/home/soft/modeltools/build/render'
+# dppp_bin = '/home/soft/DP3/build/DPPP/DPPP'
+# wsclean_bin =
+# makesourcedb_bin = '/home/soft/DP3/build/makesourcedb'
+# bbs2model_bin = '/home/soft/modeltools/build/bbs2model'
+# render_bin = '/home/soft/modeltools/build/render'
+dppp_bin = 'DPPP'
+wsclean_bin = 'wsclean'
+makesourcedb_bin = 'makesourcedb'
+bbs2model_bin = 'bbs2model'
+render_bin = 'render'
 
 # TODO
 def check_binaries():
     pass
 
-def wsclean(msin, pixelsize=3, multifreq=7, autothresh=0.3, automask=3, multiscale=False):
+def wsclean(msin, pixelsize=3, imagesize=3072, multifreq=7, autothresh=0.3,
+            automask=3, multiscale=False, kwstring=''):
     """
     wsclean
     """
-    wsclean_bin = subprocess.check_output('which wsclean; exit 0', shell=True).strip() or wsclean_bin
-    logging.debug('wsclean binary: {}'.format(wsclean_bin))
+    # wsclean_bin = subprocess.check_output('which wsclean; exit 0', shell=True).strip() or '/home/soft/wsclean/wsclean/build/wsclean'
+    # logging.debug('wsclean binary: {}'.format(wsclean_bin))
     msbase = os.path.splitext(msin)[0]
     if multiscale:
-        multiscale = '-multiscale'
-    else:
-        multiscale=''
+        kwstring += ' -multiscale'
+
     if multifreq:
-        mf = '-join-channels -channels-out {} -fit-spectral-pol 1'.format(multifreq)
-    else:
-        mf = ''
-    cmd = '{wsclean} -name {msbase} -size 3072 3072 -scale {pix}asec -niter 1000000 -auto-threshold {autothresh} \
-              {mf} -auto-mask {automask} -save-source-list -mgain 0.8 -local-rms -use-wgridder {multiscale} {msin}'.\
-              format(wsclean=wsclean_bin, msbase=msbase, pix=pixelsize, mf=mf, autothresh=autothresh,
-                     automask=automask, multiscale=multiscale, msin=msin)
-    # print cmd
+        kwstring += ' -join-channels -channels-out {} -fit-spectral-pol 1'.format(multifreq)
+
+    cmd = '{wsclean} -name {msbase} -size {imsize} {imsize} -scale {pix}asec -niter 1000000 -auto-threshold {autothresh} \
+              -auto-mask {automask} -save-source-list -mgain 0.8 -local-rms -use-wgridder {kwstring} {msin}'.\
+              format(wsclean=wsclean_bin, msbase=msbase, pix=pixelsize, autothresh=autothresh,
+                     automask=automask, imsize=imagesize, kwstring=kwstring, msin=msin)
     cmd = " ".join(cmd.split())
-    subprocess.call(cmd, shell=True)
+    print(cmd)
+    # subprocess.call(cmd, shell=True)
 
     if multifreq:
         for fname in glob.glob(msbase+'-*.fits'):
@@ -76,32 +81,36 @@ def wsclean(msin, pixelsize=3, multifreq=7, autothresh=0.3, automask=3, multisca
 
 def makesourcedb(modelfile, out=None):
     """ Make sourcedb file from a clustered model """
-    makesourcedb_bin = subprocess.check_output('which makesourcedb; exit 0', shell=True).strip() or makesourcedb_bin
-    logging.debug('makesourcedb binary: {}'.format(makesourcedb_bin))
+    # makesourcedb_bin = subprocess.check_output('which makesourcedb; exit 0', shell=True).strip() or makesourcedb_bin
+    # logging.debug('makesourcedb binary: {}'.format(makesourcedb_bin))
     out = out or os.path.splitext(modelfile)[0] + '.sourcedb'
     cmd = '{} in={} out={}'.format(makesourcedb_bin, modelfile, out)
-    subprocess.call(cmd, shell=True)
+    # subprocess.call(cmd, shell=True)
+    print(cmd)
     return out
 
 
 def bbs2model(inp, out=None):
     """ Convert model file to AO format """
-    bbs2model_bin = subprocess.check_output('which bbs2model; exit 0', shell=True).strip() or bbs2model_bin
+    # bbs2model_bin = subprocess.check_output('which bbs2model; exit 0', shell=True).strip() or bbs2model_bin
     out = out or os.path.splitext(inp)[0] + '.ao'
     cmd = '{} {} {}'.format(bbs2model_bin, inp, out)
-    subprocess.call(cmd, shell=True)
+    # subprocess.call(cmd, shell=True)
+    print(cmd)
     return out
 
 
 def render(bkgr, model, out=None):
-    render_bin = subprocess.check_output('which render; exit 0', shell=True).strip() or render_bin
+    # render_bin = subprocess.check_output('which render; exit 0', shell=True).strip() or render_bin
     out = out or os.path.split(bkgr)[0] + '/restored.fits'
     cmd = '{} -a -r -t {} -o {} {}'.format(render_bin, bkgr, out, model)
-    subprocess.call(cmd, shell=True)
+    # subprocess.call(cmd, shell=True)
+    print(cmd)
     return out
 
 
-def dical(msin, srcdb, msout=None, h5out=None, solint=1, startchan=40, nchan=192, mode='phaseonly'):
+def dical(msin, srcdb, msout=None, h5out=None, solint=1, startchan=40, nchan=192,
+          mode='phaseonly', uvlambdamin=500):
     """ direction independent calibration with DPPP """
     h5out = h5out or os.path.split(msin)[0] + '/dical.h5'
     msbase = os.path.basename(msin).split('.')[0]
@@ -117,16 +126,18 @@ def dical(msin, srcdb, msout=None, h5out=None, solint=1, startchan=40, nchan=192
           cal.h5parm={h5out} \
           cal.applysolution=True \
           cal.nchan=31 \
-          cal.uvlambdamin=500 \
+          cal.uvlambdamin={uvlambdamin} \
           steps=[cal] \
           '.format(dppp_bin=dppp_bin, msin=msin, msout=msout,
                    startchan=startchan, nchan=nchan, mode=mode,
-                   srcdb=srcdb, solint=solint, h5out=h5out)
+                   srcdb=srcdb, solint=solint, h5out=h5out, uvlambdamin=uvlambdamin)
     cmd = " ".join(cmd.split())
-    subprocess.call(cmd, shell=True)
+    print(cmd)
+    # subprocess.call(cmd, shell=True)
     return msout
 
-def ddecal(msin, srcdb, msout=None, h5out=None, solint=1, nfreq=15, startchan=0, nchan=192, mode='diagonal', subtract=True):
+def ddecal(msin, srcdb, msout=None, h5out=None, solint=1, nfreq=15,
+           startchan=0, nchan=192, mode='diagonal', uvlambdamin=500, subtract=True):
     """ Perform direction dependent calibration with DPPP """
     h5out = h5out or os.path.split(msin)[0] + '/ddcal.h5'
     msbase = os.path.basename(msin).split('.')[0]
@@ -144,11 +155,14 @@ def ddecal(msin, srcdb, msout=None, h5out=None, solint=1, nfreq=15, startchan=0,
           cal.propagatesolutions=true \
           cal.propagateconvergedonly=true \
           cal.nchan={nfreq} \
+          cal.uvlambdamin={uvlambdamin} \
           steps=[cal] \
           '.format(dppp_bin=dppp_bin, msin=msin, msout=msout, startchan=startchan, nchan=nchan, mode=mode,
-            srcdb=srcdb, solint=solint, h5out=h5out, subtract=subtract, nfreq=nfreq)
+            srcdb=srcdb, solint=solint, h5out=h5out, subtract=subtract, nfreq=nfreq,
+            uvlambdamin=uvlambdamin)
     cmd = " ".join(cmd.split())
-    subprocess.call(cmd, shell=True)
+    # subprocess.call(cmd, shell=True)
+    print(cmd)
     return msout, h5out
 
 
@@ -160,7 +174,7 @@ def view_sols(h5param):
             grp = f['sol000/{}'.format(key)]
             data = grp['val'][()]
             time = grp['time'][()]
-            print data.shape
+            # print(data.shape)
             ants = ['RT2','RT3','RT4','RT5','RT6','RT7','RT8','RT9','RTA','RTB','RTC','RTD']
             fig = plt.figure(figsize=[20, 15])
             fig.suptitle('Freq. averaged {} gain solutions'.format(key.rstrip('000')))
@@ -229,11 +243,6 @@ def main(msin, cfgfile='ddcal.yml'):
     with open(cfgfile) as f:
         cfg = yaml.safe_load(f)
 
-
-    print cfg['clean1']
-
-    sys.exit()
-
     mspath = os.path.split(os.path.abspath(msin))[0]
 
     msbase = os.path.splitext(msin)[0]
@@ -262,6 +271,8 @@ def main(msin, cfgfile='ddcal.yml'):
         wsclean(dical1, **cfg['clean2'])
         makesourcedb(mspath+'/dical1-sources.txt', out=model2)
 
+    sys.exit()
+
     if not os.path.exists(dical2):
         dical(dical1, model2, msout=dical2, h5out=h5_2, **cfg['dical2'])
         wsclean(dical2, **cfg['clean3'])
@@ -273,7 +284,7 @@ def main(msin, cfgfile='ddcal.yml'):
     dical_resid = glob.glob(mspath+'/dical2-residual.fits')[0]
 
 # Cluster
-    cluster(dical_image, dical_resid, clean_model, auto=True, nclusters=7)
+    cluster(dical_image, dical_resid, clean_model, **cfg['cluster'])
 
 # Makesourcedb
     makesourcedb(clustered_model, mspath+'/clustered.sourcedb')
@@ -282,12 +293,13 @@ def main(msin, cfgfile='ddcal.yml'):
     ddsub, h5out = ddecal(dical2, mspath+'/clustered.sourcedb', msout=ddsub, h5out=dd_h5,
                             solint=120, mode='diagonal')
 
-# view the solutions
+# view the solutions and save figure
     view_sols(dd_h5)
 
-    wsclean(ddsub, pix=3, multifreq=3, multiscale=True, automask=5, autothresh=0.5)
+    wsclean(ddsub, **cfg['clean4'])
 
-    model = bbs2model(mspath+'/dical2-sources.txt', mspath+'/model.ao')
+    bbs2model(mspath+'/dical2-sources.txt', mspath+'/model.ao')
+
     render(mspath+'/ddsub-image.fits', mspath+'/model.ao', out=final_image)
 
     if os.path.exists(final_image):
@@ -295,13 +307,20 @@ def main(msin, cfgfile='ddcal.yml'):
         cmd = 'rm -r {} {}'.format(dical1, ddsub)
         subprocess.call(cmd, shell=True)
 
-    # plt.show()
     return 0
 
 if __name__ == "__main__":
     t0 = Time.now()
-    msin = '/home/kutkin/191102001/24/M1403+5324_avg.MS'
-    main(msin)
+    parser = argparse.ArgumentParser(description='DDCal Inputs')
+    parser.add_argument('msin', help='MS file to process')
+    parser.add_argument('-c', '--config', action='store',
+                        dest='configfile', help='Config file', type=str)
+    results = parser.parse_args()
+    configfile = results.configfile or 'ddcal.yml'
+    logging.info('Using config file: {}'.format(os.path.abspath(configfile)))
+    print(configfile)
+    # msin =
+    # main(msin, cfgfile='ddcal.yml')
     extime = Time.now() - t0
-    print "Execution time: {:.1f} min".format(extime.to("minute").value)
+    print("Execution time: {:.1f} min".format(extime.to("minute").value))
 

@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.patches import Circle, Rectangle, Ellipse
 
-import copy
+# import copy
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -363,7 +363,7 @@ def auto_clustering(fig, ax, df, wcs, resid_data, pix_arcmin_scale, nbright,
         px, py = wcs.all_world2pix(c.ra, c.dec, 0)
         px, py = int(round(px)), int(round(py))
 
-        print src_index, ra, dec, px, py, flux
+        print(src_index, ra, dec, px, py, flux)
         src_index += 1
 
 # skip the edge sources
@@ -401,8 +401,7 @@ def auto_clustering(fig, ax, df, wcs, resid_data, pix_arcmin_scale, nbright,
                      continue
                  clusters.append(cluster)
                  cluster.overplot(ax)
-                 print cluster_name, ra, dec, csnr, boxsize
-                 print '\n'
+                 print(cluster_name, ra, dec, csnr, boxsize)
                  cluster_index += 1
         else:
             cluster_name = 'cluster{}'.format(src_index)
@@ -434,8 +433,7 @@ def auto_clustering(fig, ax, df, wcs, resid_data, pix_arcmin_scale, nbright,
                 continue
 
             cluster.name = 'cluster{}'.format(cluster_index)
-            print cluster.name, ra, dec, csnr, cmeasure
-            print '\n'
+            print(cluster.name, ra, dec, csnr, cmeasure)
 
             px, py = wcs.all_world2pix(cluster.center.ra, cluster.center.dec, 0)
             px, py = int(px), int(py)
@@ -454,7 +452,8 @@ def auto_clustering(fig, ax, df, wcs, resid_data, pix_arcmin_scale, nbright,
         return final_clusters
 
 
-def main(img, resid, model, auto=True, add_manual=False, nclusters=5):
+def main(img, resid, model, auto=True, add_manual=False, nclusters=5, boxsize=250,
+         nbright=80, cluster_radius=5, cluster_overlap=1.6):
 
     path = os.path.split(os.path.abspath(img))[0]
     output = os.path.join(path, 'clustered.txt')
@@ -473,23 +472,13 @@ def main(img, resid, model, auto=True, add_manual=False, nclusters=5):
     with fits.open(img) as f:
         wcs = WCS(f[0].header).celestial
         pix_arcmin_scale = f[0].header['CDELT2']*60
-        racen = f[0].header['CRVAL1']
-        deccen = f[0].header['CRVAL2']
-
-
-    cluster_radius = angles.Angle(5, unit='arcmin')
-    cluster_overlap = 1.6 # if lower than 2 clusters can intersect
-    nbright = 80 # number of bright sources to probe
-    resid_rms = mad(resid_data)
-    boxsize = 250 # pixels
-
-    # print resid_rms
-
-    fig = plt.figure(figsize=[10,10])
+        # racen = f[0].header['CRVAL1']
+        # deccen = f[0].header['CRVAL2']
+    cluster_radius = angles.Angle(cluster_radius, unit='arcmin')
+    fig = plt.figure(figsize=[12,12])
     ax = fig.add_subplot(1,1,1, projection=wcs.celestial)
     vmin, vmax = np.percentile(image_data, 5), np.percentile(image_data, 95)
     ax.imshow(resid_data, vmin=vmin, vmax=vmax, origin='lower')#cmap='gray', vmin=2e-5, vmax=0.1)#, norm=LogNorm())
-
     if auto:
         clusters = auto_clustering(fig, ax, df, wcs, resid_data, pix_arcmin_scale, nbright, cluster_radius,
                                   cluster_overlap, boxsize=boxsize, nclusters=nclusters)
@@ -503,7 +492,6 @@ def main(img, resid, model, auto=True, add_manual=False, nclusters=5):
         write_df(df, clusters, output=output)
     fig.tight_layout()
     fig.savefig(path+'/clustering.png')
-
 
 
 ### if __name__ == "__main__":
