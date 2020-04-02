@@ -143,9 +143,10 @@ def cluster_snr(df, cluster, wcs, resid_data, pix_arcmin_scale):
     a = cluster_sources(df, cluster)
     # signal_max = a.I.max()
     signal_sum = a.I.sum()
-    py, px = wcs.all_world2pix(cluster.center.ra, cluster.center.dec, 0)
-    py, px = int(round(py)), int(round(px))
-    x, y = np.mgrid[0:resid_data.shape[1], 0:resid_data.shape[0]]
+    px, py = np.round(wcs.all_world2pix(cluster.center.ra, cluster.center.dec, 0)).astype(int)
+    # print(px, py)
+    # sys.exit()
+    y, x = np.mgrid[0:resid_data.shape[0], 0:resid_data.shape[1]]
     radius_pix = radius/pix_arcmin_scale
     mask = np.where((y-py)**2+(x-px)**2<=radius_pix**2)
     noise = np.std(resid_data[mask])
@@ -192,15 +193,15 @@ def radial_profile(ra, dec, resid_img):
         pix_arcmin_scale = f[0].header['CDELT2']*60
         resid_data = f[0].data[0,0,...]
     c = radec(ra, dec)
-    py, px = wcs.all_world2pix(c.ra, c.dec, 0)
-    py, px = int(round(py)), int(round(px))
+    px, py = wcs.all_world2pix(c.ra, c.dec, 0)
+    px, py = int(round(py)), int(round(px))
     res = np.zeros_like(rads, dtype=float)
     for ind, rad in enumerate(rads):
         sampling = int(1000 * rad / final_radius)
         for angle in np.linspace(0, 2*np.pi, sampling):
             x = int(rad * np.cos(angle))
             y = int(rad * np.sin(angle))
-            d = resid_data[x+px:x+px+step, y+py:y+py+step]
+            d = resid_data[y+py:y+py+step, x+px:x+px+step]
             res[ind] += np.nanmean(abs(d)) / sampling
     return rads, res
 
@@ -220,7 +221,7 @@ def sector_max(ra, dec, resid_img, ax, nsectors=6):
     px, py = wcs.all_world2pix(c.ra, c.dec, 0)
     px, py = int(round(px)), int(round(py))
 
-    x, y = np.mgrid[0:img_size,0:img_size]
+    y, x = np.mgrid[0:img_size,0:img_size]
     x = x-px
     y = y-py
     radcond = np.logical_and(np.hypot(x,y)>r0, np.hypot(x,y)<r1)
@@ -285,7 +286,7 @@ def ellipses_coh(img, x0=None, y0=None, dr=None, amin=20, amax=100):
             # dr = (((a - amin) * NewRange) / OldRange) + drmin
             b = a*ecc
             cond = np.logical_and(x**2*(a+dr)**2 + y**2*(b+dr)**2 < (a+dr)**2*(b+dr)**2, x**2*a**2 + y**2*b**2 >= a**2*b**2)
-            if len(cond[cond])>=10:
+            if len(cond[cond])>=50:
                 # res[i, j] = abs(sum(img[cond]))/len(img[cond])
                 res[i, j] = abs(np.nanmean(img[cond]))
             else:
@@ -360,10 +361,9 @@ def auto_clustering(fig, ax, df, wcs, resid_data, pix_arcmin_scale, nbright,
 
     for ra, dec, flux in a.values:
         c = radec(ra, dec)
-        px, py = wcs.all_world2pix(c.ra, c.dec, 0)
-        px, py = int(round(px)), int(round(py))
-
-        print(src_index, ra, dec, px, py, flux)
+        px, py = np.round(wcs.all_world2pix(c.ra, c.dec, 0)).astype(int)
+        # print(px, py)
+        # print(src_index, ra, dec, px, py, flux)
         src_index += 1
 
 # skip the edge sources

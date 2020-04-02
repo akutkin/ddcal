@@ -18,6 +18,7 @@ import pandas as pd
 from matplotlib.patches import Circle
 import glob
 import logging
+logging.basicConfig()
 logging.info('Starting logger for {}'.format(__name__))
 logger = logging.getLogger(__name__)
 
@@ -69,8 +70,8 @@ def wsclean(msin, pixelsize=3, imagesize=3072, multifreq=7, autothresh=0.3,
               format(wsclean=wsclean_bin, msbase=msbase, pix=pixelsize, autothresh=autothresh,
                      automask=automask, imsize=imagesize, kwstring=kwstring, msin=msin)
     cmd = " ".join(cmd.split())
-    print(cmd)
-    # subprocess.call(cmd, shell=True)
+    # print(cmd)
+    subprocess.call(cmd, shell=True)
 
     if multifreq:
         for fname in glob.glob(msbase+'-*.fits'):
@@ -85,8 +86,8 @@ def makesourcedb(modelfile, out=None):
     # logging.debug('makesourcedb binary: {}'.format(makesourcedb_bin))
     out = out or os.path.splitext(modelfile)[0] + '.sourcedb'
     cmd = '{} in={} out={}'.format(makesourcedb_bin, modelfile, out)
-    # subprocess.call(cmd, shell=True)
-    print(cmd)
+    # print(cmd)
+    subprocess.call(cmd, shell=True)
     return out
 
 
@@ -95,8 +96,8 @@ def bbs2model(inp, out=None):
     # bbs2model_bin = subprocess.check_output('which bbs2model; exit 0', shell=True).strip() or bbs2model_bin
     out = out or os.path.splitext(inp)[0] + '.ao'
     cmd = '{} {} {}'.format(bbs2model_bin, inp, out)
-    # subprocess.call(cmd, shell=True)
-    print(cmd)
+    # print(cmd)
+    subprocess.call(cmd, shell=True)
     return out
 
 
@@ -104,8 +105,8 @@ def render(bkgr, model, out=None):
     # render_bin = subprocess.check_output('which render; exit 0', shell=True).strip() or render_bin
     out = out or os.path.split(bkgr)[0] + '/restored.fits'
     cmd = '{} -a -r -t {} -o {} {}'.format(render_bin, bkgr, out, model)
-    # subprocess.call(cmd, shell=True)
-    print(cmd)
+    # print(cmd)
+    subprocess.call(cmd, shell=True)
     return out
 
 
@@ -132,8 +133,8 @@ def dical(msin, srcdb, msout=None, h5out=None, solint=1, startchan=40, nchan=192
                    startchan=startchan, nchan=nchan, mode=mode,
                    srcdb=srcdb, solint=solint, h5out=h5out, uvlambdamin=uvlambdamin)
     cmd = " ".join(cmd.split())
-    print(cmd)
-    # subprocess.call(cmd, shell=True)
+    subprocess.call(cmd, shell=True)
+    # print(cmd)
     return msout
 
 def ddecal(msin, srcdb, msout=None, h5out=None, solint=1, nfreq=15,
@@ -161,8 +162,8 @@ def ddecal(msin, srcdb, msout=None, h5out=None, solint=1, nfreq=15,
             srcdb=srcdb, solint=solint, h5out=h5out, subtract=subtract, nfreq=nfreq,
             uvlambdamin=uvlambdamin)
     cmd = " ".join(cmd.split())
-    # subprocess.call(cmd, shell=True)
-    print(cmd)
+    # print(cmd)
+    subprocess.call(cmd, shell=True)
     return msout, h5out
 
 
@@ -199,13 +200,13 @@ def view_sols(h5param):
         fig, ax = plot_sols(h5param, 'amplitude000')
         fig.savefig(path + '/amp_sols.png')
     except:
-        logger.error('No amplitude solutions found')
+        logging.error('No amplitude solutions found')
 
     try:
         fig, ax = plot_sols(h5param, 'phase000')
         fig.savefig(path + '/phase_sols.png')
     except:
-        logger.error('No phase solutions found')
+        logging.error('No phase solutions found')
 
     # plt.show()
 
@@ -271,8 +272,6 @@ def main(msin, cfgfile='ddcal.yml'):
         wsclean(dical1, **cfg['clean2'])
         makesourcedb(mspath+'/dical1-sources.txt', out=model2)
 
-    sys.exit()
-
     if not os.path.exists(dical2):
         dical(dical1, model2, msout=dical2, h5out=h5_2, **cfg['dical2'])
         wsclean(dical2, **cfg['clean3'])
@@ -315,8 +314,9 @@ if __name__ == "__main__":
     parser.add_argument('msin', help='MS file to process')
     parser.add_argument('-c', '--config', action='store',
                         dest='configfile', help='Config file', type=str)
-    results = parser.parse_args()
-    configfile = results.configfile or 'ddcal.yml'
+    args = parser.parse_args()
+    configfile = args.configfile or 'ddcal.yml'
+    msin = args.msin
     logging.info('Using config file: {}'.format(os.path.abspath(configfile)))
     main(msin, cfgfile=configfile)
     extime = Time.now() - t0
