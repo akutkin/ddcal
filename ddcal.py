@@ -319,7 +319,6 @@ if __name__ == "__main__":
         os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ddcal.yml')
     msin = args.msin
     logging.info('Using config file: {}'.format(os.path.abspath(configfile)))
-    print(configfile)
     main(msin, cfgfile=configfile)
     extime = Time.now() - t0
     print("Execution time: {:.1f} min".format(extime.to("minute").value))
