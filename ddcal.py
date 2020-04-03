@@ -315,9 +315,11 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--config', action='store',
                         dest='configfile', help='Config file', type=str)
     args = parser.parse_args()
-    configfile = args.configfile or 'ddcal.yml'
+    configfile = args.configfile or \
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ddcal.yml')
     msin = args.msin
     logging.info('Using config file: {}'.format(os.path.abspath(configfile)))
+    print(configfile)
     main(msin, cfgfile=configfile)
     extime = Time.now() - t0
     print("Execution time: {:.1f} min".format(extime.to("minute").value))
