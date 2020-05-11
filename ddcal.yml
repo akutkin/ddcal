@@ -48,12 +48,13 @@ clean3:
     automask: 5
     autothresh: 0.5
     multiscale: True
+    kwstring: '-weight briggs -0.25'
 
 ####################### CLUSTERING #######################
 cluster:
     nbright: 80 # number of brightest clean components (CC) to check for artefacts
     boxsize: 250 # the boxsize around CC in pixels where to check for artefacts
-    nclusters: 5 # number of clusters ('auto' -- to set automatically)
+    nclusters: 10 # number of clusters ('auto' -- to set automatically)
     cluster_radius: 5 # arcmin
     cluster_overlap: 1.6 # if lower than 2 clusters can intersect
     auto: True
@@ -77,4 +78,5 @@ clean4:
     multiscale: True
     automask: 5
     autothresh: 0.5
+    kwstring: '-weight briggs -0.25'
     
