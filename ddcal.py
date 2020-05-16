@@ -167,6 +167,15 @@ def ddecal(msin, srcdb, msout=None, h5out=None, solint=1, nfreq=15,
     return msout, h5out
 
 
+def phase_shift(msin, new_center, msout=None):
+    """ new_center examples: [12h31m34.5, 52d14m07.34] or [187.5deg, 52.45deg] """
+    msout = msout or '.'
+    cmd = "DPPP msin={msin} msout={msout} msout.overwrite=True steps=[phaseshift] \
+           phaseshift.phasecenter={new_center}".format(**locals())
+    cmd = " ".join(cmd.split())
+    subprocess.call(cmd, shell=True)
+
+
 def view_sols(h5param):
     """ read and plot the gains """
     path = os.path.split(os.path.abspath(h5param))[0]
