@@ -310,11 +310,6 @@ def main(msin, cfgfile='ddcal.yml'):
 
     render(mspath+'/ddsub-image.fits', mspath+'/model.ao', out=final_image)
 
-    if os.path.exists(final_image):
-        logging.info('Clearing files')
-        cmd = 'rm -r {} {}'.format(dical1, ddsub)
-        subprocess.call(cmd, shell=True)
-
     return 0
 
 if __name__ == "__main__":
