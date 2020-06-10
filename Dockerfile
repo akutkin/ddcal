@@ -36,8 +36,22 @@ RUN git clone https://github.com/aroffringa/modeltools.git modeltools && \
     cd build && \
     cmake ../ && \
     make -j4 && \
-    cp bbs2model cluster editmodel render /usr/local/bin/ 
-
+    cp bbs2model cluster editmodel render /usr/local/bin/
+    
+#RUN git clone git clone https://git.code.sf.net/p/wsclean/code wsclean-code && \
+#    cd wsclean-code/wsclean && \
+#    mkdir build && \
+#    cd build && \
+#    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/ -DPORTABLE=True ../ && \
+#    make install -j16 && \
+#
+#   cd /source/wsclean-code/chgcentre && \
+#   mkdir build && \
+#   cd build && \
+#   cmake -DCMAKE_INSTALL_PREFIX=/usr/local/ -DPORTABLE=True ../ && \
+#   make install -j16 && \
+    
+    
 FROM lofareosc/lofar-pipeline
 COPY --from=builder /usr/local /usr/local
 USER root
